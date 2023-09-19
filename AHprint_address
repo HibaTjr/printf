@@ -1,0 +1,38 @@
+#include "main.h"
+
+/**
+ * AHprint_address - Prints the address of input in hexadecimal format.
+ * @l: va_list arguments from _AH_printf.
+ * @f: Pointer to the struct flags that determines if a flag is passed to _AH_printf.
+ *
+ * Description:
+ * This function is used to print the memory address of an input value in hexadecimal format.
+ * It takes the input argument 'p' from the va_list 'l' and converts it to a hexadecimal string
+ * representation using the 'convert' function. It then prefixes the address with "0x" and
+ * prints it to the standard output.
+ *
+ * Return: The number of characters printed.
+ */
+#include "main.h"
+
+int AHprint_address(va_list l, flags_t *f)
+{
+    char *s; /* String representation of the hexadecimal address */
+    unsigned long int p = va_arg(l, unsigned long int); /* Input memory address */
+    register int c = 0; /* Number of characters printed */
+
+    (void)f; /* Suppress unused variable warning */
+
+    /* Check if the address is NULL (nil) and print "(nil)" if it is */
+    if (!p)
+        return (_puts("(nil)"));
+
+    /* Convert the address 'p' to a hexadecimal string representation */
+    s = convert(p, 16, 1);
+
+    /* Print "0x" followed by the hexadecimal address */
+    c += _puts("0x");
+    c += _puts(s);
+
+    return (c); /* Return the number of characters printed */
+}
