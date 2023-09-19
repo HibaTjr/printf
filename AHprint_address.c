@@ -1,3 +1,4 @@
+/* AHprint_address.c */ 
 #include "main.h"
 
 /**
@@ -13,15 +14,18 @@
  *
  * Return: The number of characters printed.
  */
-#include "main.h"
-
 int AHprint_address(va_list l, flags_t *f)
 {
-    char *s; /* String representation of the hexadecimal address */
-    unsigned long int p = va_arg(l, unsigned long int); /* Input memory address */
-    register int c = 0; /* Number of characters printed */
+    char *s; 
+   /* String representation of the hexadecimal address */
+    unsigned long int p = va_arg(l, unsigned long int); 
+  /* Input memory address */
 
-    (void)f; /* Suppress unused variable warning */
+    register int c = 0;
+ /* Number of characters printed */
+
+    (void)f; 
+/* Suppress unused variable warning */
 
     /* Check if the address is NULL (nil) and print "(nil)" if it is */
     if (!p)
@@ -34,5 +38,6 @@ int AHprint_address(va_list l, flags_t *f)
     c += _puts("0x");
     c += _puts(s);
 
-    return (c); /* Return the number of characters printed */
+    return (c); 
+ /* Return the number of characters printed */
 }
