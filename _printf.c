@@ -1,82 +1,48 @@
 #include "main.h"
 
 /**
- * _printf - Custom printf function
- * @format: The format string
- * @...: Variable number of arguments
- *
- * Return: The number of characters printed
+ * _printf - produces output according to a format
+ * @format: format string containing the characters and the specifiers
+ * Description: this function will call the get_print() function that will
+ * determine which printing function to call depending on the conversion
+ * specifiers contained into fmt
+ * Return: length of the formatted output string
+ * Authors: Ehoneah Obed & Abdulhakeem Badejo
  */
 int _printf(const char *format, ...)
 {
-	int printed_chars = 0;
-	va_list args;
-	int buff_ind = 0;
-	char buffer[BUFF_SIZE];
+	int (*pfunc)(va_list, flags_t *);
+	const char *p;
+	va_list arguments;
+	flags_t flags = {0, 0, 0};
 
-	if (format == NULL)
+	register int count = 0;
+
+	va_start(arguments, format);
+	if (!format || (format[0] == '%' && !format[1]))
 		return (-1);
-
-	va_start(args, format);
-
-	for (int i = 0; format[i] != '\0'; i++)
+	if (format[0] == '%' && format[1] == ' ' && !format[2])
+		return (-1);
+	for (p = format; *p; p++)
 	{
-		if (format[i] != '%')
+		if (*p == '%')
 		{
-			buffer[buff_ind++] = format[i];
-			if (buff_ind == BUFF_SIZE)
-				print_buffer(buffer, &buff_ind);
-			printed_chars++;
-		}
-		else
-		{
-			print_buffer(buffer, &buff_ind);
-			i++;
-			if (format[i] == '\0')
-				return (-1);  /* Incomplete format specifier */
-			printed_chars += handle_format_specifier(format[i], args, buffer, &buff_ind);
-		}
+			p++;
+			if (*p == '%')
+			{
+				count += _putchar('%');
+				continue;
+			}
+			while (get_flag(*p, &flags))
+				p++;
+			pfunc = get_print(*p);
+			count += (pfunc)
+				? pfunc(arguments, &flags)
+				: _printf("%%%c", *p);
+		} else
+			count += _putchar(*p);
 	}
-
-	print_buffer(buffer, &buff_ind);
-
-	va_end(args);
-
-	return (printed_chars);
+	_putchar(-1);
+	va_end(arguments);
+	return (count);
 }
-
-/**
- * handle_format_specifier - Handle a format specifier
- * @specifier: The format specifier character
- * @args: The variable argument list
- * @buffer: The buffer for storing output
- * @buff_ind: The buffer index
- *
- * Return: The number of characters printed
- */
-int handle_format_specifier(char specifier, va_list args, char buffer[], int *buff_ind)
-{
-	int printed = 0;
-
-	switch (specifier)
-	{
-		case 'c':
-			printed = handle_char(va_arg(args, int), buffer, buff_ind);
-			break;
-		case 's':
-			printed = handle_string(va_arg(args, char *), buffer, buff_ind);
-			break;
-		case '%':
-			printed = handle_percent(buffer, buff_ind);
-			break;
-		/* Add cases for other conversion specifiers */
-		default:
-			printed = handle_unknown(specifier, buffer, buff_ind);
-			break;
-	}
-
-	return (printed);
-}
-
-/* Implement functions like handle_char, handle_string, etc. */
-
