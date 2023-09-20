@@ -1,76 +1,162 @@
 #include "main.h"
-#include <stdarg.h>
-#include <unistd.h>
 
+/************************* PRINT UNSIGNED NUMBER *************************/
 /**
- * print_integer - Print an integer
- * @args: The va_list containing the integer to print
- *
- * Return: The number of characters printed
+ * print_unsigned - Prints an unsigned number
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
  */
-int print_integer(va_list args)
+int print_unsigned(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
 {
-    int n = va_arg(args, int);
-    int num_len = num_length(n);
+	unsigned long int num = va_arg(types, unsigned long int);
 
-    return (print_number(n, num_len));
+	num = convert_size_unsgnd(num, size);
+
+	if (num == 0)
+		buffer[BUFF_SIZE - 2] = '0';
+
+	buffer[BUFF_SIZE - 1] = '\0';
+
+	int i = BUFF_SIZE - 2;
+
+	while (num > 0)
+	{
+		buffer[i--] = (num % 10) + '0';
+		num /= 10;
+	}
+
+	i++;
+
+	return (write_unsgnd(0, i, buffer, flags, width, precision, size));
 }
 
+/************* PRINT UNSIGNED NUMBER IN OCTAL  ****************/
 /**
- * num_length - Calculate the number of digits in an integer
- * @n: The integer to count digits for
- *
- * Return: The number of digits in the integer
+ * print_octal - Prints an unsigned number in octal notation
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
  */
-int num_length(int n)
+int print_octal(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
 {
-    int len = 0;
+	unsigned long int num = va_arg(types, unsigned long int);
+	unsigned long int init_num = num;
 
-    if (n == 0)
-        return (1);
+	UNUSED(width);
 
-    while (n != 0)
-    {
-        n /= 10;
-        len++;
-    }
+	num = convert_size_unsgnd(num, size);
 
-    return (len);
+	if (num == 0)
+		buffer[BUFF_SIZE - 2] = '0';
+
+	buffer[BUFF_SIZE - 1] = '\0';
+
+	int i = BUFF_SIZE - 2;
+
+	while (num > 0)
+	{
+		buffer[i--] = (num % 8) + '0';
+		num /= 8;
+	}
+
+	if (flags & F_HASH && init_num != 0)
+		buffer[i--] = '0';
+
+	i++;
+
+	return (write_unsgnd(0, i, buffer, flags, width, precision, size));
 }
 
+/************** PRINT UNSIGNED NUMBER IN HEXADECIMAL **************/
 /**
- * print_number - Print an integer with a specified number of digits
- * @n: The integer to print
- * @num_len: The number of digits to print
- *
- * Return: The number of characters printed
+ * print_hexadecimal - Prints an unsigned number in hexadecimal notation
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
  */
-int print_number(int n, int num_len)
+int print_hexadecimal(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
 {
-    int num_chars = 0;
+	return (print_hexa(types, "0123456789abcdef", buffer,
+		flags, 'x', width, precision, size));
+}
 
-    if (n == 0)
-    {
-        return (write(1, "0", 1));
-    }
+/************* PRINT UNSIGNED NUMBER IN UPPER HEXADECIMAL **************/
+/**
+ * print_hexa_upper - Prints an unsigned number in upper hexadecimal notation
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
+ */
+int print_hexa_upper(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
+{
+	return (print_hexa(types, "0123456789ABCDEF", buffer,
+		flags, 'X', width, precision, size));
+}
 
-    if (n < 0)
-    {
-        num_chars += write(1, "-", 1);
-        n = -n;
-    }
+/************** PRINT HEXX NUM IN LOWER OR UPPER **************/
+/**
+ * print_hexa - Prints a hexadecimal number in lower or upper case
+ * @types: List of arguments
+ * @map_to: Array of values to map the number to
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @flag_ch: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
+ */
+int print_hexa(va_list types, char map_to[], char buffer[],
+	int flags, char flag_ch, int width, int precision, int size)
+{
+	unsigned long int num = va_arg(types, unsigned long int);
+	unsigned long int init_num = num;
 
-    if (num_len > 0)
-    {
-        char *num_str = malloc(num_len);
-        if (num_str == NULL)
-            return (-1);
+	UNUSED(width);
 
-        snprintf(num_str, num_len, "%d", n);
-        num_chars += write(1, num_str, num_len);
+	num = convert_size_unsgnd(num, size);
 
-        free(num_str);
-    }
+	if (num == 0)
+		buffer[BUFF_SIZE - 2] = '0';
 
-    return (num_chars);
+	buffer[BUFF_SIZE - 1] = '\0';
+
+	int i = BUFF_SIZE - 2;
+
+	while (num > 0)
+	{
+		buffer[i--] = map_to[num % 16];
+		num /= 16;
+	}
+
+	if (flags & F_HASH && init_num != 0)
+	{
+		buffer[i--] = flag_ch;
+		buffer[i--] = '0';
+	}
+
+	i++;
+
+	return (write_unsgnd(0, i, buffer, flags, width, precision, size));
 }

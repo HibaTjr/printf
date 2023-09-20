@@ -1,122 +1,138 @@
 #include "main.h"
-#include <stdarg.h>
-#include <unistd.h>
+
+/************************* PRINT CHAR *************************/
 
 /**
- * print_char - Print a character
- * @args: The va_list containing the character to print
- *
- * Return: The number of characters printed
+ * print_char - Prints a char
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
  */
-int print_char(va_list args)
+int print_char(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
 {
-    char c = va_arg(args, int);
-    return (write(1, &c, 1));
+	char c = va_arg(types, int);
+
+	return (handle_write_char(c, buffer, flags, width, precision, size));
 }
 
+/************************* PRINT A STRING *************************/
 /**
- * print_string - Print a string
- * @args: The va_list containing the string to print
- *
- * Return: The number of characters printed
+ * print_string - Prints a string
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
  */
-int print_string(va_list args)
+int print_string(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
 {
-    char *str = va_arg(args, char *);
-    int len = 0;
+	char *str = va_arg(types, char *);
+	int length = 0, i;
 
-    if (str == NULL)
-        str = "(null)";
+	if (str == NULL)
+		str = "(null)";
+	
+	while (str[length] != '\0')
+		length++;
 
-    while (str[len])
-    {
-        write(1, &str[len], 1);
-        len++;
-    }
+	if (precision >= 0 && precision < length)
+		length = precision;
 
-    return (len);
+	if (width > length)
+	{
+		if (flags & F_MINUS)
+		{
+			write(1, str, length);
+			for (i = width - length; i > 0; i--)
+				write(1, " ", 1);
+			return (width);
+		}
+		else
+		{
+			for (i = width - length; i > 0; i--)
+				write(1, " ", 1);
+			write(1, str, length);
+			return (width);
+		}
+	}
+
+	return (write(1, str, length));
 }
 
+/************************* PRINT PERCENT SIGN *************************/
 /**
- * print_percent - Print a percent character
- * @args: Unused variable arguments
- *
- * Return: Always 1 (the percent character)
+ * print_percent - Prints a percent sign
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
  */
-int print_percent(__attribute__((unused)) va_list args)
+int print_percent(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
 {
-    return (write(1, "%", 1));
+	UNUSED(types);
+	UNUSED(buffer);
+	UNUSED(flags);
+	UNUSED(width);
+	UNUSED(precision);
+	UNUSED(size);
+	return (write(1, "%%", 1));
 }
 
+/************************* PRINT INT *************************/
 /**
- * print_integer - Print an integer
- * @args: The va_list containing the integer to print
- *
- * Return: The number of characters printed
+ * print_int - Print int
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
  */
-int print_integer(va_list args)
+int print_int(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
 {
-    int n = va_arg(args, int);
-    int num_len = num_length(n);
+	long int n = va_arg(types, long int);
+	int is_negative = 0;
 
-    return (print_number(n, num_len));
+	n = convert_size_number(n, size);
+
+	if (n < 0)
+	{
+		is_negative = 1;
+		n *= -1;
+	}
+
+	return (handle_write_int(n, is_negative, buffer, flags, width, precision));
 }
 
+/************************* PRINT BINARY *************************/
 /**
- * num_length - Calculate the number of digits in an integer
- * @n: The integer to count digits for
- *
- * Return: The number of digits in the integer
+ * print_binary - Prints an unsigned number in binary
+ * @types: List of arguments
+ * @buffer: Buffer array to handle print
+ * @flags: Calculates active flags
+ * @width: Width
+ * @precision: Precision specification
+ * @size: Size specifier
+ * Return: Number of chars printed
  */
-int num_length(int n)
+int print_binary(va_list types, char buffer[],
+	int flags, int width, int precision, int size)
 {
-    int len = 0;
+	unsigned int n = va_arg(types, unsigned int);
 
-    if (n == 0)
-        return (1);
-
-    while (n != 0)
-    {
-        n /= 10;
-        len++;
-    }
-
-    return (len);
-}
-
-/**
- * print_number - Print an integer with a specified number of digits
- * @n: The integer to print
- * @num_len: The number of digits to print
- *
- * Return: The number of characters printed
- */
-int print_number(int n, int num_len)
-{
-    int num_chars = 0;
-
-    if (n == 0)
-    {
-        return (write(1, "0", 1));
-    }
-
-    if (n < 0)
-    {
-        num_chars += write(1, "-", 1);
-        n = -n;
-    }
-
-    if (num_len > 0)
-    {
-        char *num_str = malloc(num_len);
-        if (num_str == NULL)
-            return (-1);
-
-        snprintf(num_str, num_len, "%d", n);
-        num_chars += write(1, num_str, num_len);
-
-        free(num_str);
-    }
-
-    return (num_chars);
+	return (handle_write_binary(n, buffer, flags, width, precision));
 }

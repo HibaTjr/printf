@@ -1,24 +1,28 @@
 #include "main.h"
-#include <stdarg.h>
 
 /**
- * get_size - Get the size of the data type based on length modifiers
- * @format: The format string
+ * get_size - Parses the format string to calculate the size specifier.
+ * @format: The formatted string containing conversion specifiers.
+ * @i: A pointer to the current position in the format string.
  *
- * Return: The size of the data type (1 for char, 2 for short, 4 for int, 8 for long)
+ * Return: The calculated size specifier.
  */
-int get_size(const char *format)
+int get_size(const char *format, int *i)
 {
-    int size = 4; // Default size for int (without length modifiers)
+	int curr_i = *i + 1;
+	int size = 0;
 
-    while (*format)
-    {
-        if (*format == 'l')
-            size = 8; // 'l' indicates long, set size to 8 for long
-        else if (*format == 'h')
-            size = 2; // 'h' indicates short, set size to 2 for short
-        format++;
-    }
+	/* Check if the current character specifies a size modifier */
+	if (format[curr_i] == 'l')
+		size = S_LONG; /* Set size to long */
+	else if (format[curr_i] == 'h')
+		size = S_SHORT; /* Set size to short */
 
-    return (size);
+	/* Update the current position pointer based on whether a size modifier was found */
+	if (size == 0)
+		*i = curr_i - 1;
+	else
+		*i = curr_i;
+
+	return (size);
 }

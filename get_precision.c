@@ -1,39 +1,49 @@
 #include "main.h"
-#include <stdarg.h>
-#include <stdbool.h>
 
 /**
- * get_precision - Get the precision value from the format string
- * @format: The format string
- *
- * Return: The precision value or -1 if precision is not specified
+ * get_precision - Parses the format string to calculate the precision for printing.
+ * @format: The formatted string containing conversion specifiers.
+ * @i: A pointer to the current position in the format string.
+ * @list: The list of arguments to be printed.
+ * Return: The calculated precision value.
  */
-int get_precision(const char *format)
+int get_precision(const char *format, int *i, va_list list)
 {
-    int precision = -1; // Default value if precision is not specified
-    bool precision_found = false;
+	int curr_i = *i + 1;
+	int precision = -1;
 
-    while (*format)
-    {
-        if (*format == '.')
-        {
-            format++; // Move past the '.' character
-            precision = 0; // Initialize precision value
+	/* Check if the format specifies precision with a period '.' */
+	if (format[curr_i] != '.')
+		return (precision);
 
-            // Parse digits to determine precision value
-            while (*format >= '0' && *format <= '9')
-            {
-                precision = precision * 10 + (*format - '0');
-                format++;
-            }
+	precision = 0;
 
-            precision_found = true;
-        }
-        else
-        {
-            format++; // Move to the next character
-        }
-    }
+	/* Iterate through the format string to extract the precision value */
+	for (curr_i += 1; format[curr_i] != '\0'; curr_i++)
+	{
+		/* Check if the current character is a digit */
+		if (is_digit(format[curr_i]))
+		{
+			/* Update the precision based on the digit */
+			precision *= 10;
+			precision += format[curr_i] - '0';
+		}
+		/* Check if the current character is '*' to indicate a variable precision */
+		else if (format[curr_i] == '*')
+		{
+			/* Skip the '*' character */
+			curr_i++;
+			/* Retrieve the precision value from the argument list */
+			precision = va_arg(list, int);
+			break;
+		}
+		/* If a non-digit character is encountered, exit the loop */
+		else
+			break;
+	}
 
-    return (precision_found ? precision : -1);
+	/* Update the current position pointer */
+	*i = curr_i - 1;
+
+	return (precision);
 }
